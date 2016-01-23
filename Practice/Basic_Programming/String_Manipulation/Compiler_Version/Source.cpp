@@ -1,6 +1,6 @@
 #include <iostream>
 #include <string>
-#include <regex>
+//#include <regex>
 #include <cmath>
 #include <cstdio>
 #include <vector>
@@ -39,7 +39,7 @@ public:
 	{
 		if (!useStandardIn && !inputFileOpened)
 		{
-			fichier_in.open(name_in, ios::in);
+			fichier_in.open(name_in.c_str(), ios::in);
 			if (!fichier_in)
 				cerr << "Impossible d'ouvrir le fichier d'entrée" << endl;
 			else
@@ -50,7 +50,7 @@ public:
 	{
 		if (!useStandardOut && !outputFileOpened)
 		{
-			fichier_out.open(name_out, ios::out | ios::trunc);
+			fichier_out.open(name_out.c_str(), ios::out | ios::trunc);
 			if (!fichier_out)
 				cerr << "Impossible d'ouvrir le fichier de sortie" << endl;
 			else
@@ -97,10 +97,17 @@ public:
 	}
 	void getline(string &s)
 	{
-		checkInputFileOpened();
-		string temp;
-		std::getline(fichier_in, temp);
-		s.append(temp);
+		if(useStandardIn)
+		{
+			std::getline(cin,s);
+		}
+		else
+		{
+			checkInputFileOpened();
+			string temp;
+			std::getline(fichier_in, temp);
+			s.append(temp);
+		}
 	}
 private:
 	string name_in;
@@ -115,12 +122,13 @@ private:
 
 void transformLineNoRegex(string &s)
 {
-	int pos_comment = INT_MAX;
-	std::size_t found_comment = s.find("//");
-	if (found_comment != std::string::npos)
-		pos_comment = found_comment;
 	while (1)
 	{
+		//Il est nécessaire de retrouver la position du commentaire après chaque modif de la chaine
+		int pos_comment = INT_MAX;
+		std::size_t found_comment = s.find("//");
+		if (found_comment != std::string::npos)
+			pos_comment = found_comment;
 		std::size_t found = s.find("->");
 		if (found == std::string::npos || found > pos_comment)
 			break;
@@ -128,7 +136,8 @@ void transformLineNoRegex(string &s)
 	}
 }
 
-void transformLine(string &s)
+//Problème avec les regex sur gcc 4.8.4
+/*void transformLine(string &s)
 {
 	smatch m_comment;
 	regex e_comment("(//)(.*)");
@@ -146,13 +155,13 @@ void transformLine(string &s)
 			s.replace(s.begin() + pos, s.begin() + pos + 2, ".");
 		s_copy.replace(s_copy.begin() + pos, s_copy.begin() + pos + 2, ".");
 	}
-}
+}*/
 
 int main()
 {
 	FluxIO flux("in.txt","out.txt");
-	flux.useStandardInput(false);
-	flux.useStandardOutput(false);
+	flux.useStandardInput(true);
+	flux.useStandardOutput(true);
 
 	string line;
 	flux.getline(line);
